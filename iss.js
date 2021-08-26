@@ -1,5 +1,3 @@
-
-
 /**
  * Makes a single API request to retrieve the user's IP address.
  * Input:
@@ -8,12 +6,13 @@
  *   - An error, if any (nullable)
  *   - The IP address as a string (null if error). Example: "162.245.144.188"
  */
-const request = require('request');
+const request = require("request");
 const fetchMyIP = function(callback) {
-  
-  request('https://api.ipify.org/?format=json', (error, response, body) => {
-    
-    if (error) callback(error, null);
+  request("https://api.ipify.org/?format=json", (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
 
     if (response.statusCode !== 200) {
       const msg = `Status Code ${response.statusCode} when fetching IP. Response: ${body}`;
@@ -22,14 +21,31 @@ const fetchMyIP = function(callback) {
     }
 
     const data = JSON.parse(body);
-    const ip = data['ip'];
+    const ip = data["ip"];
     // console.log(`typeof ip: `, typeof ip);
     callback(null, ip);
-    
-
   });
 };
 
+const fetchCoordsByIP = function(ip, callback) {
+  request(`https://freegeoip.app/json/${ip}`, (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching IP. Response: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
+    const data = JSON.parse(body);
+    const location = {};
+    location["latitude"] = data["latitude"];
+    location["longitude"] = data["longitude"];
+    callback(null, location);
+  });
+};
 
 //for other file use, do not remove
-module.exports = { fetchMyIP };
+module.exports = { fetchMyIP, fetchCoordsByIP };
